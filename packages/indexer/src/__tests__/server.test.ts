@@ -308,6 +308,13 @@ describe('GET /events', () => {
     const { status } = await request('/events?limit=abc');
     expect(status).toBe(400);
   });
+
+  test('rejects limit above 200 with 400 and accepts 200', async () => {
+    const over = await request('/events?limit=201');
+    expect(over.status).toBe(400);
+    expect(JSON.parse(over.body).error).toBe('limit must be between 1 and 200');
+    expect((await request('/events?limit=200')).status).toBe(200);
+  });
 });
 
 // ── GET /players/:id/events ────────────────────────────────────────────────
@@ -519,13 +526,17 @@ describe('GET /players', () => {
     ).toBe(false);
   });
 
-  test('caps limit at 50', async () => {
+  test('accepts limit=50 and rejects limit above 50', async () => {
     for (let i = 1; i <= 55; i++)
       seedRegistration(`cap${i}`, { ledger: i * 10 });
 
-    const json = JSON.parse((await request('/players?limit=1000')).body);
+    const json = JSON.parse((await request('/players?limit=50')).body);
     expect(json.players).toHaveLength(50);
     expect(json.total).toBe(55);
+
+    const over = await request('/players?limit=51');
+    expect(over.status).toBe(400);
+    expect(JSON.parse(over.body).error).toBe('limit must be between 1 and 50');
   });
 
   test('filters by createdAfter', async () => {

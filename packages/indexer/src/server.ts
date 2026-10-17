@@ -11,6 +11,8 @@ import {
 } from './eventPoller';
 import {
   EventStore,
+  MAX_LIMIT,
+  MAX_PLAYERS_LIMIT,
   decodePlayerCursor,
   type PlayerQueryFilter,
   type PlayerRecord,
@@ -314,8 +316,8 @@ function parseQueryFilter(
   const limitParam = searchParams.get('limit');
   if (limitParam !== null) {
     const limit = Number(limitParam);
-    if (!Number.isInteger(limit) || limit <= 0) {
-      return { ok: false, error: 'limit must be a positive integer' };
+    if (!Number.isInteger(limit) || limit <= 0 || limit > MAX_LIMIT) {
+      return { ok: false, error: `limit must be between 1 and ${MAX_LIMIT}` };
     }
     filter.limit = limit;
   }
@@ -429,8 +431,11 @@ function parsePlayersQuery(searchParams: URLSearchParams):
   const limitParam = searchParams.get('limit');
   if (limitParam !== null) {
     const limit = Number(limitParam);
-    if (!Number.isInteger(limit) || limit <= 0) {
-      return { ok: false, error: 'limit must be a positive integer' };
+    if (!Number.isInteger(limit) || limit <= 0 || limit > MAX_PLAYERS_LIMIT) {
+      return {
+        ok: false,
+        error: `limit must be between 1 and ${MAX_PLAYERS_LIMIT}`,
+      };
     }
     filter.limit = limit;
   }
